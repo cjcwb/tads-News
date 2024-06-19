@@ -1,6 +1,9 @@
-import React, { useContext } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useContext, useState } from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity, TextInput, Alert, Button } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { UserPreferencesContext } from '../App';
+
+type Category = 'business' | 'entertainment' | 'general' | 'health' | 'science' | 'sports' | 'technology';
 
 const categoriesList = [
   { key: 'business', label: 'Negócios' },
@@ -12,10 +15,12 @@ const categoriesList = [
   { key: 'technology', label: 'Tecnologia' },
 ];
 
-const ProfileCard = () => {
-  const { categories, setCategories, user } = useContext(UserPreferencesContext);
+const ProfileCard: React.FC = () => {
+  const { categories, setCategories, user, setUser } = useContext(UserPreferencesContext);
+  const [name, setName] = useState(user?.name || '');
+  const [image, setImage] = useState(user?.image || '');
 
-  const toggleCategory = (category: string) => {
+  const toggleCategory = (category: Category) => {
     if (category === 'general') {
       setCategories(['general']);
     } else {
@@ -27,13 +32,49 @@ const ProfileCard = () => {
     }
   };
 
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  const handleSave = () => {
+    if (name.trim() === '') {
+      Alert.alert('Erro', 'O nome não pode estar vazio.');
+      return;
+    }
+    if (user) {
+      setUser({ ...user, name, image: image || user.image });
+      Alert.alert('Sucesso', 'Perfil atualizado com sucesso!');
+    }
+  };
+
+  const handleLogout = () => {
+    setUser(null); // Implementar a lógica de logout, que pode ser limpar o estado do usuário
+  };
+
   return (
     <View style={styles.card}>
-      <Image
-        source={user?.image ? { uri: user.image } : require('../profile.jpg')}
-        style={styles.image}
+      <TouchableOpacity onPress={pickImage}>
+        <Image
+          source={image ? { uri: image } : require('../profile.jpg')}
+          style={styles.image}
+        />
+      </TouchableOpacity>
+      <TextInput
+        style={styles.nameInput}
+        placeholder="Nome"
+        value={name}
+        onChangeText={setName}
       />
-      {user && <Text style={styles.name}>{user.name}</Text>}
+      <Button title="Salvar Alterações" onPress={handleSave} />
       <View style={styles.categoriesContainer}>
         {categoriesList.map(({ key, label }) => (
           <TouchableOpacity
@@ -42,7 +83,7 @@ const ProfileCard = () => {
               styles.categoryButton,
               categories.includes(key) && styles.selectedCategoryButton,
             ]}
-            onPress={() => toggleCategory(key)}
+            onPress={() => toggleCategory(key as Category)}
           >
             <Text
               style={[
@@ -55,6 +96,9 @@ const ProfileCard = () => {
           </TouchableOpacity>
         ))}
       </View>
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Text style={styles.logoutButtonText}>Logout</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -78,9 +122,15 @@ const styles = StyleSheet.create({
     borderRadius: 75,
     marginBottom: 20,
   },
-  name: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  nameInput: {
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    marginBottom: 12,
+    paddingHorizontal: 8,
+    borderRadius: 5,
+    width: '80%',
+    textAlign: 'center',
   },
   categoriesContainer: {
     flexDirection: 'row',
@@ -104,6 +154,16 @@ const styles = StyleSheet.create({
   },
   selectedCategoryButtonText: {
     color: '#fff',
+  },
+  logoutButton: {
+    marginTop: 20,
+    padding: 10,
+    backgroundColor: 'red',
+    borderRadius: 5,
+  },
+  logoutButtonText: {
+    color: '#fff',
+    fontSize: 16,
   },
 });
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { View, FlatList, TouchableOpacity, StyleSheet, Button, Text, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
@@ -12,7 +12,7 @@ type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'MainTab
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
-  const { categories} = useContext(UserPreferencesContext);
+  const { categories } = useContext(UserPreferencesContext);
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -21,9 +21,10 @@ const HomeScreen: React.FC = () => {
     try {
       const promises = categories.map(category => 
         axios.get(`https://newsapi.org/v2/top-headlines?country=us&category=${category}&apiKey=SUA_API`)
+          .then(response => response.data.articles.map((article: NewsItem) => ({ ...article, category })))
       );
       const responses = await Promise.all(promises);
-      const allArticles = responses.flatMap(response => response.data.articles);
+      const allArticles = responses.flatMap(response => response);
       const filteredNews = allArticles.filter((article: NewsItem) => article.urlToImage);
       setNews(filteredNews);
     } catch (error) {
