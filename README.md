@@ -1,7 +1,7 @@
 # tads-news
 # Lucas DIAS GRR20184531
 
-Substituir o campo SUA_API no arquivo ./screens/HomeScreen.tsx
+Acessar o site https://newsapi.org/ Substituir o campo SUA_API no arquivo ./screens/HomeScreen.tsx
 
 ```
 axios.get(`https://newsapi.org/v2/top-headlines?country=us&category=${category}&apiKey=SUA_API`)
